@@ -6,16 +6,18 @@ package com.LegMeat.rbo.GUI;
 import com.LegMeat.rbo.Backend.Video;
 import com.LegMeat.rbo.Exceptions.InvalidFileTypeException;
 
-import java.util.Calendar;
-import java.util.Date;
+import java.time.LocalDateTime;
+
 
 public class App {
     public static void main(String[] args) {
+
         // hardcoded file (inc. start and end time) for now
         try {
+
             Video testVid = new Video("Problem Demonstration.mkv",
-                    new Date(2025, Calendar.JUNE, 19, 1, 32, 52),
-                    new Date(2025, Calendar.JUNE, 19, 1, 37, 52),
+                    LocalDateTime.of(2025, 6, 19,1, 32, 52),
+                    LocalDateTime.of(2025, 6, 19, 1, 37, 52),
                     "C:\\Users\\OPGam\\Videos\\Solo Progressions");
             System.out.println(testVid.getData());
         } catch (InvalidFileTypeException e) {

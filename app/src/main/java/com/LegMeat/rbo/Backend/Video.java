@@ -2,26 +2,31 @@ package com.LegMeat.rbo.Backend;
 
 import com.LegMeat.rbo.Exceptions.InvalidFileTypeException;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Video extends File {
     private String fileName;
-    private Date startTime;
-    private Date endTime;
+    private LocalDateTime duration;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
     private FileType fileType;
     private ArrayList<Integer> data = new ArrayList<>();
 
-    public Date getEndTime() {
+    public LocalDateTime getEndTime() {
         return endTime;
     }
 
-    public Date getStartTime() {
+    public LocalDateTime getStartTime() {
         return startTime;
+    }
+
+    public LocalDateTime getDuration() {
+        return duration;
     }
 
     public FileType getFileType() { return fileType; }
@@ -30,12 +35,16 @@ public class Video extends File {
 
     public ArrayList<Integer> getData() { return data; }
 
-    public void setEndTime(Date endTime) {
+    public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
     }
 
-    public void setStartTime(Date startTime) {
+    public void setStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
+    }
+
+    public void setDuration(LocalDateTime duration) {
+        this.duration = duration;
     }
 
     public void setFileType(FileType fileType) { this.fileType = fileType; }
@@ -44,7 +53,48 @@ public class Video extends File {
 
     public void setData(ArrayList<Integer> data) { this.data = data; }
 
-    public Video(String fileName, Date startTime, Date endTime, String filePath) {
+    public void setMetaData() {
+        try {
+            // List of required commands is created, and fed into new ProcessBuilder object, which opens/starts new
+            // process.
+            String[] commandList = {"ffprobe", "-v", "quiet", "-print_format", "json", "-show_format",
+                    "-show_streams", this.getAbsolutePath()};
+            ProcessBuilder pb = new ProcessBuilder(commandList);
+            Process process = pb.start();
+
+            // BufferedReader is opened and stringBuilder initialised to incrementally create one large
+            // json string for the video
+            BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            StringBuilder json = new StringBuilder();
+            while (br.readLine() != null) {
+                json.append(br.readLine());
+            }
+            // ensure process has been finished and successfully completed
+            int exitValue = 1;
+            if (process.waitFor(40, TimeUnit.SECONDS)) {
+                exitValue = process.exitValue();
+            }
+
+            if (exitValue == 0) {
+                // convert string builder object to string
+                String jsonString = json.toString();
+                // regex pattern matching to find duration in metadata
+                Pattern durationPattern = Pattern.compile("\"duration\":\\s*\"([0-9.]+)\"");
+                Matcher durationMatcher = durationPattern.matcher(jsonString);
+                if (durationMatcher.find()) {
+                    duration = LocalDateTime.parse(durationMatcher.group(1));
+                }
+
+            }
+
+        } catch (IOException | InterruptedException e) {
+            System.out.println(e.getMessage());
+        }
+
+
+    }
+
+    public Video(String fileName, LocalDateTime startTime, LocalDateTime endTime, String filePath) {
         super(filePath);
         this.fileName = fileName;
         this.startTime = startTime;
@@ -54,6 +104,8 @@ public class Video extends File {
         if (extension != -1) {
             try {
                 this.fileType = FileType.valueOf(fileName.substring(extension + 1).toUpperCase());
+                setMetaData();
+                System.out.println(this.duration);
             }
             catch (Exception e) {
                 throw new InvalidFileTypeException("File type not supported.");
@@ -74,4 +126,5 @@ public class Video extends File {
             System.out.println("Error reading file.");
         }
     }
+
 }

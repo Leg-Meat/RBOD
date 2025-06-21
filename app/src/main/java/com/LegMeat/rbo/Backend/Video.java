@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 
 public class Video extends File {
     private String fileName;
-    private LocalDateTime duration;
+    private Double duration;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private FileType fileType;
@@ -25,7 +25,7 @@ public class Video extends File {
         return startTime;
     }
 
-    public LocalDateTime getDuration() {
+    public Double getDuration() {
         return duration;
     }
 
@@ -43,7 +43,7 @@ public class Video extends File {
         this.startTime = startTime;
     }
 
-    public void setDuration(LocalDateTime duration) {
+    public void setDuration(Double duration) {
         this.duration = duration;
     }
 
@@ -78,12 +78,26 @@ public class Video extends File {
             if (exitValue == 0) {
                 // convert string builder object to string
                 String jsonString = json.toString();
-                // regex pattern matching to find duration in metadata
+                // regex pattern matching to find duration and time created in metadata
                 Pattern durationPattern = Pattern.compile("\"duration\":\\s*\"([0-9.]+)\"");
                 Matcher durationMatcher = durationPattern.matcher(jsonString);
+                // sets the video duration to the one found in the metadata
                 if (durationMatcher.find()) {
-                    duration = LocalDateTime.parse(durationMatcher.group(1));
+                    duration = Double.parseDouble(durationMatcher.group(1));
                 }
+                System.out.println("duration: " + duration);
+                Pattern timeCreatedPattern = Pattern.compile("\"creation_time\":\\s*\"([^\"]+)\"");
+                Matcher timeCreatedMatcher = timeCreatedPattern.matcher(jsonString);
+                if (timeCreatedMatcher.find()) {
+                    endTime = LocalDateTime.parse(timeCreatedMatcher.group(1));
+                }
+                System.out.println(endTime);
+                // use end time and duration to calculate start time (our issue is that clips are of a fixed length)
+                // convert duration to long for direct subtraction (round as a precaution; most clip lengths integers)
+                long lDuration = Math.round(duration);
+                startTime = endTime.minusSeconds(lDuration);
+                System.out.println(startTime);
+
 
             }
 
@@ -102,14 +116,12 @@ public class Video extends File {
 
         int extension = fileName.lastIndexOf(".");
         if (extension != -1) {
-            try {
+           try {
                 this.fileType = FileType.valueOf(fileName.substring(extension + 1).toUpperCase());
                 setMetaData();
-                System.out.println(this.duration);
-            }
-            catch (Exception e) {
-                throw new InvalidFileTypeException("File type not supported.");
-            }
+           } catch (RuntimeException e) {
+               throw new InvalidFileTypeException("File metadata corrupt.");
+           }
         } else {
             throw new InvalidFileTypeException("Invalid file type.");
         }

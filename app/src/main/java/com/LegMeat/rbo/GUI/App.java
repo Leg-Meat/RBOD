@@ -15,11 +15,10 @@ public class App {
         // hardcoded file (inc. start and end time) for now
         try {
 
-            Video testVid = new Video("Problem Demonstration.mkv",
+            Video testVid = new Video("Problem demonstration.mkv",
                     LocalDateTime.of(2025, 6, 19,1, 32, 52),
                     LocalDateTime.of(2025, 6, 19, 1, 37, 52),
-                    "C:\\Users\\OPGam\\Videos\\Solo Progressions");
-            System.out.println(testVid.getData());
+                    "C:\\Users\\OPGam\\Videos\\Solo Progressions\\Problem demonstration.mkv");
         } catch (InvalidFileTypeException e) {
             System.out.println(e.getMessage());
         }

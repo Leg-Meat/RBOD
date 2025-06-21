@@ -34,7 +34,13 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = "org.example.App"
+    mainClass = "com.LegMeat.rbo.GUI.App"
+}
+
+tasks.jar {
+    manifest {
+        attributes["Main-Class"] = "com.LegMeat.rbo.GUI.App"
+    }
 }
 
 tasks.named<Test>("test") {

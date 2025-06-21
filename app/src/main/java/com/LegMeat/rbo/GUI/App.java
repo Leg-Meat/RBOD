@@ -4,7 +4,8 @@
 package com.LegMeat.rbo.GUI;
 
 import com.LegMeat.rbo.Backend.Video;
-import com.LegMeat.rbo.Exceptions.InvalidFileTypeException;
+import com.LegMeat.rbo.Exceptions.ExternalCommandError;
+import com.LegMeat.rbo.Exceptions.InvalidFileException;
 
 import java.time.LocalDateTime;
 
@@ -13,15 +14,7 @@ public class App {
     public static void main(String[] args) {
 
         // hardcoded file (inc. start and end time) for now
-        try {
-
-            Video testVid = new Video("Problem demonstration.mkv",
-                    LocalDateTime.of(2025, 6, 19,1, 32, 52),
-                    LocalDateTime.of(2025, 6, 19, 1, 37, 52),
-                    "C:\\Users\\OPGam\\Videos\\Solo Progressions\\Problem demonstration.mkv");
-        } catch (InvalidFileTypeException e) {
-            System.out.println(e.getMessage());
-        }
-
+        Video testVid = new Video("Problem demonstration.mkv",
+                "C:\\Users\\OPGam\\Videos\\Solo Progressions\\Problem demonstration.mkv");
     }
 }

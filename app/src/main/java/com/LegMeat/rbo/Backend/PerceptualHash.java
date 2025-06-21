@@ -1,4 +1,5 @@
 package com.LegMeat.rbo.Backend;
 
-public class VideoList {
+public class PerceptualHash  {
+
 }

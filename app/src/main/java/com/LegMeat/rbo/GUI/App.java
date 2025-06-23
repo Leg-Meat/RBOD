@@ -4,17 +4,17 @@
 package com.LegMeat.rbo.GUI;
 
 import com.LegMeat.rbo.Backend.Video;
-import com.LegMeat.rbo.Exceptions.ExternalCommandError;
 import com.LegMeat.rbo.Exceptions.InvalidFileException;
-
-import java.time.LocalDateTime;
 
 
 public class App {
     public static void main(String[] args) {
+        try {
+            Video testVid = new Video("Problem demonstration.mkv",
+                    "C:\\Users\\OPGam\\Videos\\Solo Progressions\\Problem demonstration.mkv");
+        } catch (InvalidFileException e) {
+            e.getMessage();
+        }
 
-        // hardcoded file (inc. start and end time) for now
-        Video testVid = new Video("Problem demonstration.mkv",
-                "C:\\Users\\OPGam\\Videos\\Solo Progressions\\Problem demonstration.mkv", 60);
     }
 }

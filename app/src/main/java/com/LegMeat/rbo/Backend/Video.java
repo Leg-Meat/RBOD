@@ -1,6 +1,6 @@
 package com.LegMeat.rbo.Backend;
 
-import com.LegMeat.rbo.Exceptions.ExternalCommandError;
+import com.LegMeat.rbo.Exceptions.ExternalCommandException;
 import com.LegMeat.rbo.Exceptions.InvalidFileException;
 
 import javax.imageio.ImageIO;
@@ -16,8 +16,7 @@ import java.util.TreeMap;
 public class Video extends File {
     private String fileName;
     private FileType fileType;
-    private int fps;
-    private ArrayList<Double> keyFrameTimeStamps = new ArrayList();
+    private ArrayList<Double> keyFrameTimeStamps = new ArrayList<>();
     private ArrayList<KeyFrame> keyFrames = new ArrayList<>();
     private TreeMap<Video, Duration> overlappingVideos = new TreeMap<>();
 
@@ -45,22 +44,15 @@ public class Video extends File {
         return fileType;
     }
 
-    public void setFps(int fps) {
-        this.fps = fps;
-    }
 
-    public int getFps() {
-        return fps;
-    }
-
-    public void cut(LocalDateTime newStart) throws ExternalCommandError, InvalidFileException {
+    public void cut(LocalDateTime newStart) throws ExternalCommandException, InvalidFileException {
     }
 
     /**
      * Used during "image2pipe" commands to redirect all errors messages to wherever the null device is depending
      * on a user's operating system.
      */
-    public void redirectToNullDevice(ProcessBuilder pb) throws ExternalCommandError, InvalidFileException {
+    public void redirectToNullDevice(ProcessBuilder pb) {
         // Redirects all errors to null device (prevents pollution)
         String osName = System.getProperty("os.name");
         if (osName.toLowerCase().contains("windows")) {
@@ -75,7 +67,7 @@ public class Video extends File {
      * Finds the timestamp of each keyframe using ffprobe, later used by addAllKeyFrames to give each keyFrame object
      * a timestamp.
      */
-    public void addKeyFrameTimestamps() {
+    public void addKeyFrameTimestamps() throws ExternalCommandException, InvalidFileException {
         String[] probeCommand = {"ffprobe", "-loglevel", "fatal", "-skip_frame", "nokey", "-select_streams",
                 "v:0", "-show_entries", "frame=pts_time", "-of", "csv", this.getAbsolutePath()};
         try {
@@ -90,14 +82,21 @@ public class Video extends File {
                     this.keyFrameTimeStamps.add(timestamp);
                 }
             }
+            if (process.exitValue() != 0) {
+                throw new ExternalCommandException("Unable to extract key frame timestamps. Ensure ffprobe is installed" +
+                        "to system path.");
+            }
+        } catch (SecurityException e) {
+            throw new ExternalCommandException("Unable to extract key frame timestamps. Program denied security" +
+                    " permissions.");
+        } catch (UnsupportedOperationException e) {
+            throw new ExternalCommandException("Unable to extract key frame timestamps. Operating system unsupported.");
         } catch (IOException e) {
-            e.getMessage();
+            throw new InvalidFileException("Unable to extract key frame timestamps. File corrupt.");
         }
     }
 
-    public void addAllKeyFrames() {
-        // first get load all timestamps
-        addKeyFrameTimestamps();
+    public void addAllKeyFrames() throws ExternalCommandException, InvalidFileException {
         // Adds all keyframes into the perpetual
         String[] mpegCommand = {"ffmpeg", "-loglevel", "fatal", "-i", this.getAbsolutePath(), "-vf",
                 "select='eq(pict_type,PICT_TYPE_I);", "-vsync", "vfr", "-an", "-f", "image2pipe",
@@ -118,16 +117,28 @@ public class Video extends File {
                 keyFrameId++;
             }
         } catch (IOException e) {
-            e.getMessage();
+            throw new ExternalCommandException("Unable to extract key frame timestamps.");
         }
     }
 
-    public Video(String fileName, String filePath, int fps) {
+    public Video(String fileName, String filePath) {
         super(filePath);
         this.fileName = fileName;
-        // later find fps from metadata
-        this.fps = fps;
-        addAllKeyFrames();
+        try{
+            this.fileType = FileType.valueOf(fileName.substring(fileName.length() - 3).toUpperCase());
+        } catch (IllegalArgumentException e){
+            throw new InvalidFileException("Invalid file type.");
+        }
+        try {
+            addKeyFrameTimestamps();
+        } catch (InvalidFileException | ExternalCommandException e) {
+            e.getMessage();
+        }
+        try {
+           addAllKeyFrames();
+        } catch(InvalidFileException| ExternalCommandException e) {
+            e.getMessage();
+        }
 
     }
 }

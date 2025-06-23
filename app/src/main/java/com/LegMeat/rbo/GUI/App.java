@@ -15,6 +15,6 @@ public class App {
 
         // hardcoded file (inc. start and end time) for now
         Video testVid = new Video("Problem demonstration.mkv",
-                "C:\\Users\\OPGam\\Videos\\Solo Progressions\\Problem demonstration.mkv");
+                "C:\\Users\\OPGam\\Videos\\Solo Progressions\\Problem demonstration.mkv", 60);
     }
 }

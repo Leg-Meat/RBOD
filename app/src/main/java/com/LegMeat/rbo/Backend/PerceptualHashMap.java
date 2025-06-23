@@ -1,5 +1,5 @@
 package com.LegMeat.rbo.Backend;
 
-public class PerceptualHash  {
+public class PerceptualHashMap {
 
 }

@@ -1,6 +1,7 @@
 package com.LegMeat.rbo.Backend;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 
 public class KeyFrame {
     private long id;
@@ -23,13 +24,13 @@ public class KeyFrame {
         this.timestamp = timestamp;
     }
 
-    public BufferedImage getKeyframeData() {
-        return keyframeData;
-    }
+     public BufferedImage getKeyframeData() {
+         return keyframeData;
+     }
 
-    public void setKeyframeData(BufferedImage keyframeData) {
-        this.keyframeData = keyframeData;
-    }
+     public void setKeyframeData(BufferedImage keyframeData) {
+         this.keyframeData = keyframeData;
+     }
 
     public KeyFrame(Double timestamp, BufferedImage keyframeData, long id) {
         this.timestamp = timestamp;

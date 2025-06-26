@@ -4,6 +4,7 @@
 package com.LegMeat.rbo.GUI;
 
 import com.LegMeat.rbo.Backend.Video;
+import com.LegMeat.rbo.Exceptions.ExternalCommandException;
 import com.LegMeat.rbo.Exceptions.InvalidFileException;
 
 
@@ -12,9 +13,8 @@ public class App {
         try {
             Video testVid = new Video("Problem demonstration.mkv",
                     "C:\\Users\\OPGam\\Videos\\Solo Progressions\\Problem demonstration.mkv");
-        } catch (InvalidFileException e) {
+        } catch (InvalidFileException | ExternalCommandException e){
             e.getMessage();
         }
-
     }
 }

@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 
 public class Video extends File {
@@ -19,6 +20,7 @@ public class Video extends File {
     private ArrayList<Double> keyFrameTimeStamps = new ArrayList<>();
     private ArrayList<KeyFrame> keyFrames = new ArrayList<>();
     private TreeMap<Video, Duration> overlappingVideos = new TreeMap<>();
+    private int corruptedKeyFrames = 0;
 
     public void addOverlappedMap(Video overlappedVideo, Duration localOverlappedTime) {
         overlappingVideos.put(overlappedVideo, localOverlappedTime);
@@ -52,7 +54,7 @@ public class Video extends File {
      * Used during "image2pipe" commands to redirect all errors messages to wherever the null device is depending
      * on a user's operating system.
      */
-    public void redirectToNullDevice(ProcessBuilder pb) {
+    private void redirectToNullDevice(ProcessBuilder pb) {
         // Redirects all errors to null device (prevents pollution)
         String osName = System.getProperty("os.name");
         if (osName.toLowerCase().contains("windows")) {
@@ -67,7 +69,7 @@ public class Video extends File {
      * Finds the timestamp of each keyframe using ffprobe, later used by addAllKeyFrames to give each keyFrame object
      * a timestamp.
      */
-    public void addKeyFrameTimestamps() throws ExternalCommandException, InvalidFileException {
+    private void addKeyFrameTimestamps() throws ExternalCommandException, InvalidFileException {
         String[] probeCommand = {"ffprobe", "-loglevel", "fatal", "-skip_frame", "nokey", "-select_streams",
                 "v:0", "-show_entries", "frame=pts_time", "-of", "csv", this.getAbsolutePath()};
         try {
@@ -96,28 +98,128 @@ public class Video extends File {
         }
     }
 
-    public void addAllKeyFrames() throws ExternalCommandException, InvalidFileException {
+    private void addAllKeyFrames() throws ExternalCommandException, InvalidFileException {
         // Adds all keyframes into the perpetual
-        String[] mpegCommand = {"ffmpeg", "-loglevel", "fatal", "-i", this.getAbsolutePath(), "-vf",
-                "select='eq(pict_type,PICT_TYPE_I);", "-vsync", "vfr", "-an", "-f", "image2pipe",
-                "-c:v", "png", "-"};
-        int keyFrameId = 1;
+        String[] mpegCommand = {"ffmpeg", "-loglevel", "fatal", "-nostats", "-hide_banner", "-probesize", "32",
+                "-analyzeduration", "0", "-i", this.getAbsolutePath(), "-vf",
+                "select='eq(pict_type,I)'", "-vsync", "0", "-pix_fmt", "rgb24", "-an", "-f",
+                "image2pipe", "-c:v", "png", "-"};
 
+        // May use this attribute later to determine corruption of a video
+        this.corruptedKeyFrames = 0;
         try {
             ProcessBuilder pbMpeg = new ProcessBuilder(mpegCommand);
             redirectToNullDevice(pbMpeg);
             Process process = pbMpeg.start();
 
             // attempt to generate keyframe objects
+            PushbackInputStream stdout = new PushbackInputStream(process.getInputStream(), 8);
+            BufferedImage keyFrame;
+            int keyFrameId = 1;
+            byte[] pngMagicBytes = {(byte)0x89,(byte) 0x50,(byte) 0x4E,(byte)0x47,(byte) 0x0D,(byte)0x0A,
+                    (byte)0x1A,(byte) 0x0A};
+            byte[] buffer = new byte[8];
 
-            BufferedInputStream reader = new BufferedInputStream(process.getInputStream());
-            BufferedImage frame;
-            while ((frame = ImageIO.read(reader)) != null) {
-                this.keyFrames.add(new KeyFrame(keyFrameTimeStamps.get(keyFrameId), frame, keyFrameId));
-                keyFrameId++;
+            // Piping with ffmpeg can cause a LOT of problems. This highly complex, but robust code searches for the
+            // magic bytes representing the header of a complete png keyframe, and deletes all interim bytes, as these
+            // must be erroneous (either unwanted feedback from ffmpeg [which may vary with version] into stdout,
+            // corrupted data, or errors that have managed to find their way into the input stream). IOFile is very
+            // strict and quite poor at skipping polluted data, so won't recognise the stdout as one image otherwise.
+            System.out.println("Attempting to read " + keyFrameTimeStamps.size() + " key frames...");
+            while (true) {
+                try {
+                    // check if the process has finished
+                    if (!process.isAlive()) {
+                        if (process.exitValue() == 0) { // the process has exited after reading final keyframe
+                            break;
+                        } else if (process.exitValue() != 0) { // the process has exited due to an error
+                            throw new ExternalCommandException("Unable to extract key keyFrame. Ensure ffmpeg is " +
+                                    "installed to system path and file is not corrupt.");
+                        }
+                    } else {
+                        // repeatedly attempt to read keyFrame (keyFrame could be corrupt or polluted)
+                        System.out.println("Reading key frame " + keyFrameId + "...");
+                        while (true) {
+                            // Search for magic bytes
+                            int possibleMagicBytesRead = 0;
+                            int possibleMagicByte = 0;
+                            int skippedBytes = 0;
+                            try {
+                                while (possibleMagicBytesRead!= 8 && !Thread.currentThread().isInterrupted()) {
+                                    possibleMagicByte = stdout.read();
+                                    if ((byte) possibleMagicByte == pngMagicBytes[possibleMagicBytesRead]) {
+                                        buffer[possibleMagicBytesRead] = (byte) possibleMagicByte;
+                                        possibleMagicBytesRead++;
+                                    } else if (possibleMagicByte == -1) {
+                                            System.out.println("Trailing bytes were non-image.");
+                                            break;
+                                    } else {
+                                        possibleMagicBytesRead = 0;
+                                        skippedBytes++;
+                                    }
+                                }
+                                System.out.println("Skipped " + skippedBytes + " non-image byte(s).");
+                            } catch (IOException e) {
+                                System.out.println("Keyframe " + keyFrameId +  "corrupted.");
+                                this.corruptedKeyFrames++;
+                                keyFrameId++;
+                                break;
+                            }
+
+                            // break again (out of external loop) if trailing bytes are non-image
+                            if (possibleMagicByte == -1) {
+                                break;
+                            } else if (possibleMagicBytesRead == 8) {
+                                try {
+                                    // unread to let ImageIO see the magic bytes too
+                                    stdout.unread(buffer, 0, possibleMagicBytesRead);
+                                    keyFrame = ImageIO.read(stdout);
+                                    if (keyFrame != null) {
+                                        try {
+                                            this.keyFrames.add(new KeyFrame(keyFrameTimeStamps.get(keyFrameId-1),
+                                                    keyFrame, keyFrameId));
+                                            System.out.println("Keyframe " + keyFrameId + " Successfully added!.");
+                                            System.out.println("Keyframe duration: " +
+                                                    keyFrameTimeStamps.get(keyFrameId-1));
+                                            keyFrameId++;
+                                        } catch (IndexOutOfBoundsException e) {
+                                            throw new InvalidFileException("File does not contain a " +
+                                                    "timestamp for each keyframe.");
+                                        }
+                                    } else {
+                                        System.out.println("Keyframe " + keyFrameId + "corrupted.");
+                                        this.corruptedKeyFrames++;
+                                        keyFrameId++;
+                                    }
+                                } catch (IOException e) {
+                                    System.out.println("Keyframe " + keyFrameId +  "corrupted.");
+                                    this.corruptedKeyFrames++;
+                                    keyFrameId++;
+                                }
+                            }
+                        }
+                    }
+                } catch (IllegalThreadStateException e) {
+                    throw new InvalidFileException("Catastrophic error occurred. File is corrupt.");
+                }
+            }
+            // Check to ensure the process has finished in time. Large timeout time, as some large videos may take a
+            // while to process.
+            boolean finished = process.waitFor(3, TimeUnit.MINUTES);
+            if (!finished) {
+                throw new InvalidFileException("File is either too large or corrupt and timed out.");
+            } else {
+                if (process.exitValue() != 0) {
+                    throw new ExternalCommandException("Ensure ffmpeg is installed to system path, and file is not" +
+                            "so corrupt that it cannot be read.");
+                } else {
+                    System.out.println("Successfully read " + keyFrameTimeStamps.size() + " key frames.");
+                }
             }
         } catch (IOException e) {
-            throw new ExternalCommandException("Unable to extract key frame timestamps.");
+            throw new InvalidFileException("Catastrophic error occurred. File is corrupt.");
+        } catch (InterruptedException e) {
+            System.out.println("Process cancelled by user.");
         }
     }
 

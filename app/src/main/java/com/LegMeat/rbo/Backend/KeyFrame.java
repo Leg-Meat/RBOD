@@ -32,6 +32,33 @@ public class KeyFrame {
          this.keyframeData = keyframeData;
      }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof KeyFrame)) {
+            return false;
+        } else {
+            BufferedImage frameOne = this.getKeyframeData();
+            BufferedImage frameTwo = ((KeyFrame) obj).getKeyframeData();
+            if (frameOne.getWidth() == frameTwo.getWidth() && frameOne.getHeight() == frameTwo.getHeight()) {
+                for (int x = 0; x < frameOne.getWidth(); x++) {
+                    for (int y = 0; y < frameOne.getHeight(); y++) {
+                        if (frameOne.getRGB(x, y) != frameTwo.getRGB(x, y)) {
+                            return false;
+                        }
+                    }
+                }
+            } else {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "KeyFrame: " + id + " timestamp: " + timestamp + " Buffered Image: " + keyframeData;
+    }
+
     public KeyFrame(Double timestamp, BufferedImage keyframeData, long id) {
         this.timestamp = timestamp;
         this.keyframeData = keyframeData;

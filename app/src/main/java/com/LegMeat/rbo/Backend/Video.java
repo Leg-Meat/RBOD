@@ -19,15 +19,24 @@ public class Video extends File {
     private FileType fileType;
     private ArrayList<Double> keyFrameTimeStamps = new ArrayList<>();
     private ArrayList<KeyFrame> keyFrames = new ArrayList<>();
-    private TreeMap<Video, Duration> overlappingVideos = new TreeMap<>();
-    private int corruptedKeyFrames = 0;
+    private TreeMap<Video, Double> overlappingVideos = new TreeMap<>();
 
-    public void addOverlappedMap(Video overlappedVideo, Duration localOverlappedTime) {
+    public void addOverlappedMap(Video overlappedVideo, Double localOverlappedTime) {
         overlappingVideos.put(overlappedVideo, localOverlappedTime);
     }
 
-    public TreeMap<Video, Duration> getOverlappedMap() {
+    public TreeMap<Video, Double> getOverlappedMap() {
         return overlappingVideos;
+    }
+
+    public ArrayList<KeyFrame> getKeyFrames() {
+        return keyFrames;
+    }
+
+    public void displayKeyFrames() {
+        for (KeyFrame keyFrame : keyFrames) {
+            System.out.println(keyFrame.toString());
+        }
     }
 
     public void setFileName(String fileName) {
@@ -106,7 +115,7 @@ public class Video extends File {
                 "image2pipe", "-c:v", "png", "-"};
 
         // May use this attribute later to determine corruption of a video
-        this.corruptedKeyFrames = 0;
+        int corruptedKeyFrames = 0;
         try {
             ProcessBuilder pbMpeg = new ProcessBuilder(mpegCommand);
             redirectToNullDevice(pbMpeg);
@@ -161,7 +170,7 @@ public class Video extends File {
                                 System.out.println("Skipped " + skippedBytes + " non-image byte(s).");
                             } catch (IOException e) {
                                 System.out.println("Keyframe " + keyFrameId +  "corrupted.");
-                                this.corruptedKeyFrames++;
+                                corruptedKeyFrames++;
                                 keyFrameId++;
                                 break;
                             }
@@ -179,7 +188,7 @@ public class Video extends File {
                                             this.keyFrames.add(new KeyFrame(keyFrameTimeStamps.get(keyFrameId-1),
                                                     keyFrame, keyFrameId));
                                             System.out.println("Keyframe " + keyFrameId + " Successfully added!.");
-                                            System.out.println("Keyframe duration: " +
+                                            System.out.println("Keyframe timestamp: " +
                                                     keyFrameTimeStamps.get(keyFrameId-1));
                                             keyFrameId++;
                                         } catch (IndexOutOfBoundsException e) {
@@ -188,12 +197,12 @@ public class Video extends File {
                                         }
                                     } else {
                                         System.out.println("Keyframe " + keyFrameId + "corrupted.");
-                                        this.corruptedKeyFrames++;
+                                        corruptedKeyFrames++;
                                         keyFrameId++;
                                     }
                                 } catch (IOException e) {
                                     System.out.println("Keyframe " + keyFrameId +  "corrupted.");
-                                    this.corruptedKeyFrames++;
+                                    corruptedKeyFrames++;
                                     keyFrameId++;
                                 }
                             }
@@ -220,6 +229,29 @@ public class Video extends File {
             throw new InvalidFileException("Catastrophic error occurred. File is corrupt.");
         } catch (InterruptedException e) {
             System.out.println("Process cancelled by user.");
+        }
+    }
+
+    /**
+     * Compares the keyframes of the video to the keyframes of another video. If an overlap is found, the relevent data
+     * regarding the overlap (undecided yet) is returned
+     * @param videoTwo the second video being compared
+     * @return
+     */
+    public void findOverlap(Video videoTwo) {
+        for (KeyFrame frameVidTwo: videoTwo.getKeyFrames()) {
+            boolean found = false;
+            for (KeyFrame frameVidOne : this.keyFrames) {
+                if (frameVidOne.equals(frameVidTwo)) {
+                    System.out.println("First Match found at: " + frameVidOne.getTimestamp() +
+                            " and: " + frameVidTwo.getTimestamp());
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                break;
+            }
         }
     }
 

@@ -6,27 +6,32 @@ import com.LegMeat.rbo.Exceptions.InvalidFileException;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 
 public class Video extends File {
     private String fileName;
     private FileType fileType;
+    private Double duration;
     private ArrayList<Double> keyFrameTimeStamps = new ArrayList<>();
     private ArrayList<KeyFrame> keyFrames = new ArrayList<>();
-    private TreeMap<Video, Double> overlappingVideos = new TreeMap<>();
+    private Boolean isLeadVideo = false; // dictates whether the clip is a lead video of another overlapping clip
+    private Double cutPoint = -1.0; // where to cut secondary video from. -1 if not a secondary video.
+    private Video secondaryVideo = null; // dictates the closest overlapping video
 
-    public void addOverlappedMap(Video overlappedVideo, Double localOverlappedTime) {
-        overlappingVideos.put(overlappedVideo, localOverlappedTime);
-    }
-
-    public TreeMap<Video, Double> getOverlappedMap() {
-        return overlappingVideos;
+    // updates the secondary video, if a new, or closer, overlapping video is found
+    public void updateSecondaryVideo(Video givenSecondaryVideo) {
+        if (secondaryVideo != null) {
+            // update attributes of old secondary video
+            Video oldSecondaryVideo = this.secondaryVideo;
+            oldSecondaryVideo.setCutPoint(-1.0);
+        }
+        // update new secondary video
+        this.secondaryVideo = givenSecondaryVideo;
+        this.secondaryVideo.setCutPoint(findCutPoint(givenSecondaryVideo));
     }
 
     public ArrayList<KeyFrame> getKeyFrames() {
@@ -55,6 +60,37 @@ public class Video extends File {
         return fileType;
     }
 
+    public void setDuration(Double duration) {
+        this.duration = duration;
+    }
+
+    public Double getDuration() {
+        return duration;
+    }
+
+    public Boolean isLeadVideo() {
+        return isLeadVideo;
+    }
+
+    public void setIsLeadVideo(Boolean leadVideo) {
+        isLeadVideo = leadVideo;
+    }
+
+    public double getCutPoint() {
+        return cutPoint;
+    }
+
+    public void setCutPoint(double cutPoint) {
+        this.cutPoint = cutPoint;
+    }
+
+    public Video getSecondaryVideo() {
+        return secondaryVideo;
+    }
+
+    public void setSecondaryVideo(Video secondaryVideo) {
+        this.secondaryVideo = secondaryVideo;
+    }
 
     public void cut(LocalDateTime newStart) throws ExternalCommandException, InvalidFileException {
     }
@@ -94,8 +130,8 @@ public class Video extends File {
                 }
             }
             if (process.exitValue() != 0) {
-                throw new ExternalCommandException("Unable to extract key frame timestamps. Ensure ffprobe is installed" +
-                        "to system path.");
+                throw new ExternalCommandException("Unable to extract key frame timestamps. Ensure ffprobe is " +
+                        "installed to system path.");
             }
         } catch (SecurityException e) {
             throw new ExternalCommandException("Unable to extract key frame timestamps. Program denied security" +
@@ -113,7 +149,6 @@ public class Video extends File {
                 "-analyzeduration", "0", "-i", this.getAbsolutePath(), "-vf",
                 "select='eq(pict_type,I)'", "-vsync", "0", "-pix_fmt", "rgb24", "-an", "-f",
                 "image2pipe", "-c:v", "png", "-"};
-
         // May use this attribute later to determine corruption of a video
         int corruptedKeyFrames = 0;
         try {
@@ -175,7 +210,7 @@ public class Video extends File {
                                 break;
                             }
 
-                            // break again (out of external loop) if trailing bytes are non-image
+                            // break again (out of external loop) if trailing post-magic-bytes are non-image
                             if (possibleMagicByte == -1) {
                                 break;
                             } else if (possibleMagicBytesRead == 8) {
@@ -238,13 +273,15 @@ public class Video extends File {
      * @param videoTwo the second video being compared
      * @return
      */
-    public void findOverlap(Video videoTwo) {
+    private Double findCutPoint(Video videoTwo) {
+        Double cutPoint = -1.0;
         for (KeyFrame frameVidTwo: videoTwo.getKeyFrames()) {
             boolean found = false;
             for (KeyFrame frameVidOne : this.keyFrames) {
                 if (frameVidOne.equals(frameVidTwo)) {
-                    System.out.println("First Match found at: " + frameVidOne.getTimestamp() +
-                            " and: " + frameVidTwo.getTimestamp());
+                    // Cut point is lead video duration, subtract lead video overlap time
+                    cutPoint = this.duration - frameVidOne.getTimestamp();
+                    System.out.println("Cut point at: " + cutPoint);
                     found = true;
                     break;
                 }
@@ -252,6 +289,39 @@ public class Video extends File {
             if (found) {
                 break;
             }
+        }
+        return cutPoint;
+    }
+
+    private void findDuration() {
+        // ffProbe command finds timestamp of last packet (finding duration in metadata isn't robust; not all
+        // file type metadata contains it)
+        String[] probeCommand = {"ffprobe", "-v", "error", "-show_entries", "format=duration", "-of",
+                "default=noprint_wrappers=1:nokey=1", this.getAbsolutePath()};
+        try {
+            // we don't redirect to null device here, as for some reason the command output arrives through the
+            // error stream
+            ProcessBuilder pbProbe = new ProcessBuilder(probeCommand);
+            Process process = pbProbe.start();
+            // Output duration
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            this.duration = Double.parseDouble(reader.readLine());
+            // Check to ensure the process has finished in time. Short timeout time, as shouldn't be long process.
+            boolean finished = process.waitFor(15, TimeUnit.SECONDS);
+            if (!finished) {
+                throw new InvalidFileException("File is either too large or corrupt and timed out.");
+            } else {
+                if (process.exitValue() != 0) {
+                    throw new ExternalCommandException("Ensure ffmpeg is installed to system path, and file is not" +
+                            "so corrupt that it cannot be read.");
+                } else {
+                    System.out.println("Successfully read " + keyFrameTimeStamps.size() + " key frames.");
+                }
+            }
+        } catch (IOException e) {
+            throw new InvalidFileException("Catastrophic error occurred. File is corrupt.");
+        } catch (InterruptedException e) {
+            System.out.println("Process cancelled by user.");
         }
     }
 
@@ -271,6 +341,11 @@ public class Video extends File {
         try {
            addAllKeyFrames();
         } catch(InvalidFileException| ExternalCommandException e) {
+            e.getMessage();
+        }
+        try {
+            findDuration();
+        } catch (InvalidFileException | ExternalCommandException e) {
             e.getMessage();
         }
 

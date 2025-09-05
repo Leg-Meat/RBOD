@@ -28,6 +28,11 @@ public class App {
             Video vid4 = new Video("Replay 2025-06-19 01-07-14.mkv",
                    "C:\\Users\\OPGam\\Videos\\Roblox VR\\Misc Clips\\Replay 2025-06-19 01-07-14.mkv");
 
+            vid1.findOverlap(vid2);
+            vid2.findOverlap(vid3);
+            vid3.findOverlap(vid4);
+            vid1.updateSecondaryVideo(vid2);
+            vid2.getCutPoint();
         } catch (InvalidFileException | ExternalCommandException e){
             e.getMessage();
         }

@@ -22,18 +22,6 @@ public class Video extends File {
     private Double cutPoint = -1.0; // where to cut secondary video from. -1 if not a secondary video.
     private Video secondaryVideo = null; // dictates the closest overlapping video
 
-    // updates the secondary video, if a new, or closer, overlapping video is found
-    public void updateSecondaryVideo(Video givenSecondaryVideo) {
-        if (secondaryVideo != null) {
-            // update attributes of old secondary video
-            Video oldSecondaryVideo = this.secondaryVideo;
-            oldSecondaryVideo.setCutPoint(-1.0);
-        }
-        // update new secondary video
-        this.secondaryVideo = givenSecondaryVideo;
-        this.secondaryVideo.setCutPoint(findCutPoint(givenSecondaryVideo));
-    }
-
     public ArrayList<KeyFrame> getKeyFrames() {
         return keyFrames;
     }
@@ -267,32 +255,6 @@ public class Video extends File {
         }
     }
 
-    /**
-     * Compares the keyframes of the video to the keyframes of another video. If an overlap is found, the relevent data
-     * regarding the overlap (undecided yet) is returned
-     * @param videoTwo the second video being compared
-     * @return
-     */
-    private Double findCutPoint(Video videoTwo) {
-        Double cutPoint = -1.0;
-        for (KeyFrame frameVidTwo: videoTwo.getKeyFrames()) {
-            boolean found = false;
-            for (KeyFrame frameVidOne : this.keyFrames) {
-                if (frameVidOne.equals(frameVidTwo)) {
-                    // Cut point is lead video duration, subtract lead video overlap time
-                    cutPoint = this.duration - frameVidOne.getTimestamp();
-                    System.out.println("Cut point at: " + cutPoint);
-                    found = true;
-                    break;
-                }
-            }
-            if (found) {
-                break;
-            }
-        }
-        return cutPoint;
-    }
-
     private void findDuration() {
         // ffProbe command finds timestamp of last packet (finding duration in metadata isn't robust; not all
         // file type metadata contains it)
@@ -325,6 +287,69 @@ public class Video extends File {
         }
     }
 
+    /**
+     * Compares the keyframes of the video to the keyframes of another video. If an overlap is found, the relevent data
+     * regarding the overlap (undecided yet) is returned
+     * @param videoTwo the second video being compared
+     * @return
+     */
+    private Double findCutPoint(Video videoTwo) {
+        Double cutPoint = -1.0;
+        for (KeyFrame frameVidTwo: videoTwo.getKeyFrames()) {
+            boolean found = false;
+            for (KeyFrame frameVidOne : this.keyFrames) {
+                if (frameVidOne.equals(frameVidTwo)) {
+                    // Cut point is lead video duration, subtract lead video overlap time
+                    cutPoint = this.duration - frameVidOne.getTimestamp();
+                    System.out.println("Cut point at: " + cutPoint);
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                break;
+            }
+        }
+        return cutPoint;
+    }
+
+    /**
+     * updates the secondary video, if a new, or closer, overlapping video is found
+     * @param givenSecondaryVideo The new secondary video to update the new (or old one)
+     */
+    public void updateSecondaryVideo(Video givenSecondaryVideo) {
+        if (secondaryVideo != null) {
+            // update attributes of old secondary video
+            Video oldSecondaryVideo = this.secondaryVideo;
+            oldSecondaryVideo.setCutPoint(-1.0);
+        }
+        // update new secondary video
+        this.secondaryVideo = givenSecondaryVideo;
+        this.secondaryVideo.setCutPoint(findCutPoint(givenSecondaryVideo));
+    }
+
+    /**
+     * Compares the keyframes of the video to the keyframes of another video. If an overlap is found, the relevent data
+     * regarding the overlap (undecided yet) is returned
+     * @param videoTwo the second video being compared
+     * @return
+     */
+    public void findOverlap(Video videoTwo) {
+        for (KeyFrame frameVidTwo: videoTwo.getKeyFrames()) {
+            boolean found = false;
+            for (KeyFrame frameVidOne : this.keyFrames) {
+                if (frameVidOne.equals(frameVidTwo)) {
+                    System.out.println("First Match found at: " + frameVidOne.getTimestamp() +
+                            " and: " + frameVidTwo.getTimestamp());
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                break;
+            }
+        }
+    }
     public Video(String fileName, String filePath) {
         super(filePath);
         this.fileName = fileName;

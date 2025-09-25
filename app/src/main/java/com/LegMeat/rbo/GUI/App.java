@@ -3,6 +3,7 @@
  */
 package com.LegMeat.rbo.GUI;
 
+import com.LegMeat.rbo.Backend.Directory;
 import com.LegMeat.rbo.Backend.KeyFrame;
 import com.LegMeat.rbo.Backend.Video;
 import com.LegMeat.rbo.Exceptions.ExternalCommandException;
@@ -18,21 +19,11 @@ public class App {
             //Video testVid = new Video("Problem demonstration.mkv",
                     // "C:\\Users\\OPGam\\Videos\\Solo Progressions\\Problem demonstration.mkv");
             // testVid.displayKeyFrames();
+            Directory smallTestRecordingFolder = new Directory(
+                    "C:\\Users\\OPGam\\Videos\\Roblox VR\\Misc Clips\\Misc Clips Testing");
+            Directory regularRecordingFolder = new Directory(
+                    "C:\\Users\\OPGam\\Videos\\Roblox VR\\Misc Clips");
 
-            Video vid1 = new Video("Replay 2025-06-19 01-03-59.mkv",
-                    "C:\\Users\\OPGam\\Videos\\Roblox VR\\Misc Clips\\Replay 2025-06-19 01-03-59.mkv");
-            Video vid2 = new Video("Replay 2025-06-19 01-04-37.mkv",
-                    "C:\\Users\\OPGam\\Videos\\Roblox VR\\Misc Clips\\Replay 2025-06-19 01-04-37.mkv");
-            Video vid3 = new Video("Replay 2025-06-19 01-06-55.mkv",
-                    "C:\\Users\\OPGam\\Videos\\Roblox VR\\Misc Clips\\Replay 2025-06-19 01-06-55.mkv");
-            Video vid4 = new Video("Replay 2025-06-19 01-07-14.mkv",
-                   "C:\\Users\\OPGam\\Videos\\Roblox VR\\Misc Clips\\Replay 2025-06-19 01-07-14.mkv");
-
-            vid1.findOverlap(vid2);
-            vid2.findOverlap(vid3);
-            vid3.findOverlap(vid4);
-            vid1.updateSecondaryVideo(vid2);
-            vid2.getCutPoint();
         } catch (InvalidFileException | ExternalCommandException e){
             e.getMessage();
         }

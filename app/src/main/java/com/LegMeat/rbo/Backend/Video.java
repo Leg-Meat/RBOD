@@ -197,7 +197,6 @@ public class Video extends File {
                                 keyFrameId++;
                                 break;
                             }
-
                             // break again (out of external loop) if trailing post-magic-bytes are non-image
                             if (possibleMagicByte == -1) {
                                 break;
@@ -288,12 +287,13 @@ public class Video extends File {
     }
 
     /**
-     * Compares the keyframes of the video to the keyframes of another video. If an overlap is found, the relevent data
-     * regarding the overlap (undecided yet) is returned
+     * ---NEEDS REFACTORING--- (overlaps a LOT with findOverlap method)
+     *
+     * Finds the "cut point" of where the secondary video needs to be cut from
      * @param videoTwo the second video being compared
      * @return
      */
-    private Double findCutPoint(Video videoTwo) {
+    public Double findCutPoint(Video videoTwo) {
         Double cutPoint = -1.0;
         for (KeyFrame frameVidTwo: videoTwo.getKeyFrames()) {
             boolean found = false;
@@ -329,26 +329,30 @@ public class Video extends File {
     }
 
     /**
-     * Compares the keyframes of the video to the keyframes of another video. If an overlap is found, the relevent data
-     * regarding the overlap (undecided yet) is returned
+     * Compares the keyframes of the video to the keyframes of another video. If an overlap is found, the overlapping
+     * timestamp is output to console (but only returned if the video is a "lead" video in the timestamp (i.e. other
+     * video is secondary)
      * @param videoTwo the second video being compared
      * @return
      */
-    public void findOverlap(Video videoTwo) {
+    public Double findOverlap(Video videoTwo) {
         for (KeyFrame frameVidTwo: videoTwo.getKeyFrames()) {
-            boolean found = false;
             for (KeyFrame frameVidOne : this.keyFrames) {
                 if (frameVidOne.equals(frameVidTwo)) {
                     System.out.println("First Match found at: " + frameVidOne.getTimestamp() +
                             " and: " + frameVidTwo.getTimestamp());
-                    found = true;
-                    break;
+                    // Overlapping videos only need to be unidirectonal, so we don't return the timestamp if it is
+                    // as secondary video (i.e. if frameVidOne is 0.0)
+                    if (frameVidOne.getTimestamp() == 0.0) {
+                        return -1.0;
+                    } else {
+                        return frameVidOne.getTimestamp();
+                    }
                 }
             }
-            if (found) {
-                break;
-            }
         }
+        // returns -1.0 if no overlap is found.
+        return -1.0;
     }
     public Video(String fileName, String filePath) {
         super(filePath);

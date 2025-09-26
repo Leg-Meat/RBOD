@@ -25,6 +25,7 @@ public class Video extends File {
     private Boolean isLeadVideo = false; // dictates whether the clip is a lead video of another overlapping clip
     private Double cutPoint = -1.0; // where to cut secondary video from. -1 if not a secondary video.
     private Video secondaryVideo = null; // dictates the closest overlapping video
+    private boolean corrupted = false; // dictates if a video is corrupt
 
     public ArrayList<KeyFrame> getKeyFrames() {
         return keyFrames;
@@ -34,6 +35,14 @@ public class Video extends File {
         for (KeyFrame keyFrame : keyFrames) {
             System.out.println(keyFrame.toString());
         }
+    }
+
+    public void setCorrupted(boolean corrupted) {
+        this.corrupted = corrupted;
+    }
+
+    public boolean isCorrupted() {
+        return corrupted;
     }
 
     public void setFileName(String fileName) {
@@ -327,7 +336,12 @@ public class Video extends File {
             Process process = pbProbe.start();
             // Output duration
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            this.duration = Double.parseDouble(reader.readLine());
+            try {
+                this.duration = Double.parseDouble(reader.readLine());
+            } catch (Exception e) {
+                this.corrupted = true;
+                throw new InvalidFileException("File is corrupt.");
+            }
             // Check to ensure the process has finished in time. Short timeout time, as shouldn't be long process.
             boolean finished = process.waitFor(15, TimeUnit.SECONDS);
             if (!finished) {

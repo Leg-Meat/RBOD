@@ -22,15 +22,19 @@ public class Directory {
         int videoNum = 1;
         for (Video video : this.videoList) {
             System.out.println("Attempting to cut video " + videoNum + " out of " + videoList.size() + " .");
-            try {
-                video.cut();
-                System.out.println("Successfully cut video " + videoNum + "!");
-            } catch (InvalidFileException e) {
-                System.out.println("Video has no cutpoint yet.");
-            } catch (IOException e) {
-                System.out.println("IO Error cutting or overwriting video " + videoNum + "! Ensure ffmpeg is" +
-                        "installed to system path and has write permissions. Ensure File.nio.file.Files has" +
-                        "overwrite permissions.");
+            if (video.isCorrupted()) {
+                System.out.println("Video " + videoNum + " is corrupted.");
+            } else {
+                try {
+                    video.cut();
+                    System.out.println("Successfully cut video " + videoNum + "!");
+                } catch (InvalidFileException e) {
+                    System.out.println("Video has no cutpoint yet.");
+                } catch (IOException e) {
+                    System.out.println("IO Error cutting or overwriting video " + videoNum + "! Ensure ffmpeg is" +
+                            "installed to system path and has write permissions. Ensure File.nio.file.Files has" +
+                            "overwrite permissions.");
+                }
             }
             videoNum++;
         }
@@ -49,7 +53,8 @@ public class Directory {
                 try {
                     videoList.add(new Video(filename, directoryPath + "\\" + filename));
                 } catch (InvalidFileException e) {
-                    System.out.println("File not added (non-video or unsupported format): " + e.getMessage());
+                    System.out.println("File not added (non-video, unsupported format or corrupt video): " +
+                            e.getMessage());
                 }
             }
             System.out.println("Directory contains " + videoList.size() + " files. Ending read...");

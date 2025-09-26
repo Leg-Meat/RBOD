@@ -6,6 +6,10 @@ import com.LegMeat.rbo.Exceptions.InvalidFileException;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -80,21 +84,78 @@ public class Video extends File {
         this.secondaryVideo = secondaryVideo;
     }
 
-    public void cut(LocalDateTime newStart) throws ExternalCommandException, InvalidFileException {
+    /**
+     * Cuts the video by its cut point
+     * @throws ExternalCommandException
+     * @throws InvalidFileException
+     */
+    public void cut() throws ExternalCommandException, InvalidFileException, IOException {
+        if (this.cutPoint == -1.0) {
+            throw new InvalidFileException("No CutPoint yet.");
+        } else {
+            // Assuming the video HAS a cut point, a temporary copy of the cut video is made, so that the original file
+            // won't be lost or corrupted if the process fails for any reason.
+            String outputAbsolutePath = this.getAbsolutePath().substring(0,this.getAbsolutePath().length() - 3)
+                    + "_temp.mkv";
+            String[] mpegCommand = {"ffmpeg", "-y", "-ss", String.valueOf(this.cutPoint), "-i", this.getAbsolutePath(),
+            "-c", "copy", outputAbsolutePath};
+            try {
+                ProcessBuilder pbMpeg = new ProcessBuilder(mpegCommand);
+                // redirect both error and stdout to null device (stdout unnecessary here and will only hang)
+                redirectToNullDevice(pbMpeg, true);
+                redirectToNullDevice(pbMpeg, false);
+                Process process = pbMpeg.start();
+                boolean finished = process.waitFor(1, TimeUnit.MINUTES);
+                if (!finished) {
+                    throw new InvalidFileException("File is either too large or corrupt and timed out.");
+                } else {
+                    if (process.exitValue() != 0) {
+                        throw new ExternalCommandException("Unable to cut video. Ensure ffmpeg is " +
+                                "installed to system path and has write permissions.");
+                    }
+                    // now begin overwrite process...
+                    try {
+                        Path outPutPath = Paths.get(outputAbsolutePath);
+                        Path originalPath = Paths.get(this.getAbsolutePath());
+                        Files.move(outPutPath, originalPath, StandardCopyOption.REPLACE_EXISTING);
+                    } catch (IOException e) {
+                        throw new IOException(e.getMessage());
+                    }
+                }
+            } catch (SecurityException e) {
+                throw new ExternalCommandException("Unable to cut video. Program denied security permissions.");
+            } catch (UnsupportedOperationException e) {
+                throw new ExternalCommandException("Unable to cut video. Operating system unsupported.");
+            } catch (IOException e) {
+                throw new IOException("File could not be cut due to corruption.");
+            } catch (InterruptedException e) {
+                System.out.println("Process cancelled by user.");
+            }
+        }
     }
 
     /**
      * Used during "image2pipe" commands to redirect all errors messages to wherever the null device is depending
      * on a user's operating system.
      */
-    private void redirectToNullDevice(ProcessBuilder pb) {
-        // Redirects all errors to null device (prevents pollution)
+    private void redirectToNullDevice(ProcessBuilder pb, boolean error) {
         String osName = System.getProperty("os.name");
-        if (osName.toLowerCase().contains("windows")) {
-            pb.redirectError(new File("NUL:"));
+        if (error) {
+            // Redirects all errors to null device (prevents pollution)
+            if (osName.toLowerCase().contains("windows")) {
+                pb.redirectError(new File("NUL:"));
+            } else {
+                // device location of UNIX systems (macOS, Linux, etc.)
+                pb.redirectError(new File("/dev/null"));
+            }
         } else {
-            // device location of UNIX systems (macOS, Linux, etc.)
-            pb.redirectError(new File("/dev/null"));
+            // Redirects all stdout to null device (prevents hanging)
+            if (osName.toLowerCase().contains("windows")) {
+                pb.redirectInput(new File("NUL:"));
+            } else {
+                // device location of UNIX systems (macOS, Linux, etc.)
+                pb.redirectInput(new File("/dev/null"));
+            }
         }
     }
 
@@ -107,7 +168,7 @@ public class Video extends File {
                 "v:0", "-show_entries", "frame=pts_time", "-of", "csv", this.getAbsolutePath()};
         try {
             ProcessBuilder pbProbe = new ProcessBuilder(probeCommand);
-            redirectToNullDevice(pbProbe);
+            redirectToNullDevice(pbProbe, true);
             Process process = pbProbe.start();
             Scanner reader = new Scanner(process.getInputStream()).useDelimiter("[frame|,]");
             while (reader.hasNext()) {
@@ -141,7 +202,7 @@ public class Video extends File {
         int corruptedKeyFrames = 0;
         try {
             ProcessBuilder pbMpeg = new ProcessBuilder(mpegCommand);
-            redirectToNullDevice(pbMpeg);
+            redirectToNullDevice(pbMpeg, true);
             Process process = pbMpeg.start();
 
             // attempt to generate keyframe objects

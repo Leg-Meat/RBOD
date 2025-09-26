@@ -2,6 +2,7 @@ package com.LegMeat.rbo.Backend;
 
 import com.LegMeat.rbo.Exceptions.InvalidFileException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.io.File;
 
@@ -18,7 +19,21 @@ public class Directory {
      * cut points.
      */
     public void executeCuts() {
-        // TBC
+        int videoNum = 1;
+        for (Video video : this.videoList) {
+            System.out.println("Attempting to cut video " + videoNum + " out of " + videoList.size() + " .");
+            try {
+                video.cut();
+                System.out.println("Successfully cut video " + videoNum + "!");
+            } catch (InvalidFileException e) {
+                System.out.println("Video has no cutpoint yet.");
+            } catch (IOException e) {
+                System.out.println("IO Error cutting or overwriting video " + videoNum + "! Ensure ffmpeg is" +
+                        "installed to system path and has write permissions. Ensure File.nio.file.Files has" +
+                        "overwrite permissions.");
+            }
+            videoNum++;
+        }
     }
 
     /**

@@ -21,9 +21,9 @@ public class App {
             // testVid.displayKeyFrames();
             Directory smallTestRecordingFolder = new Directory(
                     "C:\\Users\\OPGam\\Videos\\Roblox VR\\Misc Clips\\Misc Clips Testing");
-            Directory regularRecordingFolder = new Directory(
-                    "C:\\Users\\OPGam\\Videos\\Roblox VR\\Misc Clips");
-
+            // Directory regularRecordingFolder = new Directory(
+                  //  "C:\\Users\\OPGam\\Videos\\Roblox VR\\Misc Clips");
+            smallTestRecordingFolder.executeCuts();
         } catch (InvalidFileException | ExternalCommandException e){
             e.getMessage();
         }

@@ -5,8 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9d1579a1-e9e3-4b54-b8e2-122736011cf8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/LegMeat/rbo/Backend/Directory.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/LegMeat/rbo/Backend/Directory.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/LegMeat/rbo/Backend/Directory.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/LegMeat/rbo/Backend/Video.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/LegMeat/rbo/Backend/Video.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/LegMeat/rbo/GUI/App.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/LegMeat/rbo/GUI/App.java" afterDir="false" />
     </list>
@@ -58,7 +58,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Application.App.executor": "Run",
+    "Application.App.executor": "Coverage",
     "Gradle.Build RBOD.executor": "Run",
     "Gradle.RBOD:app [:app:com.LegMeat.rbo.GUI.App.main()].executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -110,7 +110,11 @@
       <workItem from="1756949682074" duration="5843000" />
       <workItem from="1757033190647" duration="2626000" />
       <workItem from="1758313592111" duration="868000" />
-      <workItem from="1758756408187" duration="10712000" />
+      <workItem from="1758756408187" duration="10818000" />
+      <workItem from="1758838176898" duration="13000" />
+      <workItem from="1758838199525" duration="1476000" />
+      <workItem from="1758839697557" duration="843000" />
+      <workItem from="1758840706595" duration="6534000" />
     </task>
     <servers />
   </component>
@@ -122,19 +126,22 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="java-method">
           <url>file://$PROJECT_DIR$/app/src/main/java/com/LegMeat/rbo/Backend/Directory.java</url>
-          <line>26</line>
-          <properties class="com.LegMeat.rbo.Backend.Directory" method="&lt;init&gt;">
+          <line>20</line>
+          <properties class="com.LegMeat.rbo.Backend.Directory" method="executeCuts">
             <option name="EMULATED" value="true" />
             <option name="WATCH_EXIT" value="false" />
           </properties>
-          <option name="timeStamp" value="2" />
+          <option name="timeStamp" value="4" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/app/src/main/java/com/LegMeat/rbo/Backend/Directory.java</url>
-          <line>73</line>
-          <option name="timeStamp" value="3" />
+          <line>36</line>
+          <option name="timeStamp" value="5" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/RBOD$App.ic" NAME="App Coverage Results" MODIFIED="1758839834418" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="true" />
   </component>
 </project>

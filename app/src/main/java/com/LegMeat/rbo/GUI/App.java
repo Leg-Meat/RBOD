@@ -20,7 +20,7 @@ public class App {
                     // "C:\\Users\\OPGam\\Videos\\Solo Progressions\\Problem demonstration.mkv");
             // testVid.displayKeyFrames();
             Directory smallTestRecordingFolder = new Directory(
-                    "C:\\Users\\OPGam\\Videos\\Roblox VR\\Misc Clips\\Misc Clips Testing");
+                    "C:\\Users\\OPGam\\Videos\\Freshie to Self-Sufficency\\Solo Spearfisher");
             // Directory regularRecordingFolder = new Directory(
                   //  "C:\\Users\\OPGam\\Videos\\Roblox VR\\Misc Clips");
             smallTestRecordingFolder.executeCuts();

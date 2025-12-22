@@ -98,16 +98,46 @@ public class Video extends File {
      * @throws ExternalCommandException
      * @throws InvalidFileException
      */
-    public void cut() throws ExternalCommandException, InvalidFileException, IOException {
+    public void cut(String newPath) throws ExternalCommandException, InvalidFileException, IOException {
+        String outputAbsolutePath = newPath + "//" + this.fileName.substring(0, this.fileName.length()-3) + "_cut.mkv";
         if (this.cutPoint == -1.0) {
+            // Just copy the video over if it has no cutPoint (overwriting suspended, no creating a new directory
+            // with the cut state of the old directory).
+            String[] mpegCommand = {"ffmpeg","-i", this.getAbsolutePath(), "-map", "0", "-c", "copy", outputAbsolutePath};
+            try {
+                ProcessBuilder pbMpeg = new ProcessBuilder(mpegCommand);
+                // redirect both error and stdout to null device (stdout unnecessary here and will only hang)
+                redirectToNullDevice(pbMpeg, true);
+                redirectToNullDevice(pbMpeg, false);
+                Process process = pbMpeg.start();
+                boolean finished = process.waitFor(1, TimeUnit.MINUTES);
+                if (!finished) {
+                    throw new InvalidFileException("File is either too large or corrupt and timed out.");
+                } else {
+                    if (process.exitValue() != 0) {
+                        throw new ExternalCommandException("Unable to copy video. Ensure ffmpeg is " +
+                                "installed to system path and has write permissions.");
+                    }
+                }
+            } catch(SecurityException e){
+                throw new ExternalCommandException("Unable to cut video. Program denied security permissions.");
+            } catch(UnsupportedOperationException e){
+                throw new ExternalCommandException("Unable to cut video. Operating system unsupported.");
+            } catch(IOException e){
+                throw new IOException(e.getMessage());
+            } catch(InterruptedException e){
+                System.out.println("Process cancelled by user.");
+            }
             throw new InvalidFileException("No CutPoint yet.");
         } else {
             // Assuming the video HAS a cut point, a temporary copy of the cut video is made, so that the original file
             // won't be lost or corrupted if the process fails for any reason.
-            String outputAbsolutePath = this.getAbsolutePath().substring(0,this.getAbsolutePath().length() - 3)
-                    + "_temp.mkv";
+
+            // Cut command
             String[] mpegCommand = {"ffmpeg", "-y", "-ss", String.valueOf(this.cutPoint), "-i", this.getAbsolutePath(),
-            "-c", "copy", outputAbsolutePath};
+            "-map", "0", "-c", "copy", outputAbsolutePath};
+
+
             try {
                 ProcessBuilder pbMpeg = new ProcessBuilder(mpegCommand);
                 // redirect both error and stdout to null device (stdout unnecessary here and will only hang)
@@ -122,21 +152,22 @@ public class Video extends File {
                         throw new ExternalCommandException("Unable to cut video. Ensure ffmpeg is " +
                                 "installed to system path and has write permissions.");
                     }
-                    // now begin overwrite process...
-                    try {
-                        Path outPutPath = Paths.get(outputAbsolutePath);
-                        Path originalPath = Paths.get(this.getAbsolutePath());
-                        Files.move(outPutPath, originalPath, StandardCopyOption.REPLACE_EXISTING);
-                    } catch (IOException e) {
-                        throw new IOException(e.getMessage());
-                    }
+
+                    // Overwriting original file temporarily suspended
+                    // try {
+                    //          Path outPutPath = Paths.get(outputAbsolutePath);
+                 //       Path originalPath = Paths.get(this.getAbsolutePath());
+                //        Files.move(outPutPath, originalPath, StandardCopyOption.REPLACE_EXISTING);
+                //    } catch (IOException e) {
+                  //      throw new IOException(e.getMessage());
+                //    }
                 }
             } catch (SecurityException e) {
                 throw new ExternalCommandException("Unable to cut video. Program denied security permissions.");
             } catch (UnsupportedOperationException e) {
                 throw new ExternalCommandException("Unable to cut video. Operating system unsupported.");
             } catch (IOException e) {
-                throw new IOException("File could not be cut due to corruption.");
+                throw new IOException(e.getMessage());
             } catch (InterruptedException e) {
                 System.out.println("Process cancelled by user.");
             }

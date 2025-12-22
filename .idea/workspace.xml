@@ -5,9 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9d1579a1-e9e3-4b54-b8e2-122736011cf8" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/LegMeat/rbo/Backend/Directory.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/LegMeat/rbo/Backend/Directory.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/LegMeat/rbo/Backend/Video.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/LegMeat/rbo/Backend/Video.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/LegMeat/rbo/GUI/App.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/LegMeat/rbo/GUI/App.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,6 +48,19 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Leg-Meat&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Leg-Meat/RBOD.git&quot;,
+    &quot;accountId&quot;: &quot;5f9a433a-367f-43a7-8119-dc382d68aa6b&quot;
+  }
+}</component>
+  <component name="GradleScriptDefinitionsStorage" workingDir="$PROJECT_DIR$" gradleHome="C:\Users\OPGam\.gradle\wrapper\dists\gradle-8.12.1-bin\eumc4uhoysa37zql93vfjkxy0\gradle-8.12.1" javaHome="C:\Users\OPGam\.jdks\ms-17.0.17" gradleVersion="8.12.1" />
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
   &quot;associatedIndex&quot;: 6
@@ -57,11 +72,14 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
-    &quot;Application.App.executor&quot;: &quot;Coverage&quot;,
+    &quot;Application.App.executor&quot;: &quot;Run&quot;,
     &quot;Gradle.Build RBOD.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.RBOD [:app:com.LegMeat.rbo.GUI.App.main()].executor&quot;: &quot;Run&quot;,
     &quot;Gradle.RBOD:app [:app:com.LegMeat.rbo.GUI.App.main()].executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/OPGam/Desktop/RBOD&quot;,
@@ -79,10 +97,11 @@
 }</component>
   <component name="RunManager">
     <configuration name="App" type="Application" factoryName="Application">
-      <option name="ALTERNATIVE_JRE_PATH" value="$PROJECT_DIR$/../../../../Program Files/Eclipse Adoptium/jdk-17.0.14.7-hotspot" />
+      <option name="ALTERNATIVE_JRE_PATH" value="17" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
       <option name="MAIN_CLASS_NAME" value="com.LegMeat.rbo.GUI.App" />
       <module name="RBOD.app.main" />
+      <option name="VM_PARAMETERS" value="-Xmx8G" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -91,8 +110,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-125ca727e0f0-intellij.indexing.shared.core-IU-243.23654.189" />
-        <option value="bundled-js-predefined-d6986cc7102b-822845ee3bb5-JavaScript-IU-243.23654.189" />
+        <option value="bundled-jdk-30f59d01ecdd-cffe25b9f5b3-intellij.indexing.shared.core-IU-253.28294.334" />
+        <option value="bundled-js-predefined-d6986cc7102b-c7e53b3be11b-JavaScript-IU-253.28294.334" />
       </set>
     </attachedChunks>
   </component>
@@ -115,6 +134,14 @@
       <workItem from="1758839697557" duration="843000" />
       <workItem from="1758840706595" duration="6901000" />
       <workItem from="1758848967769" duration="1769000" />
+      <workItem from="1762993080754" duration="1075000" />
+      <workItem from="1762994373787" duration="16000" />
+      <workItem from="1765286531556" duration="16000" />
+      <workItem from="1765765412532" duration="6481000" />
+      <workItem from="1765935037967" duration="1483000" />
+      <workItem from="1765941439010" duration="2662000" />
+      <workItem from="1766361208177" duration="3671000" />
+      <workItem from="1766380300049" duration="4883000" />
     </task>
     <servers />
   </component>

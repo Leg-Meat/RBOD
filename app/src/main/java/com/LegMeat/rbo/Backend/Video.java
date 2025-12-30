@@ -99,7 +99,7 @@ public class Video extends File {
      * @throws InvalidFileException
      */
     public void cut(String newPath) throws ExternalCommandException, InvalidFileException, IOException {
-        String outputAbsolutePath = newPath + "//" + this.fileName.substring(0, this.fileName.length()-3) + "_cut.mkv";
+        String outputAbsolutePath = newPath + "\\" + this.fileName.substring(0, this.fileName.length()-3) + "_cut.mkv";
         if (this.cutPoint == -1.0) {
             // Just copy the video over if it has no cutPoint (overwriting suspended, no creating a new directory
             // with the cut state of the old directory).
@@ -320,11 +320,13 @@ public class Video extends File {
                                         }
                                     } else {
                                         System.out.println("Keyframe " + keyFrameId + "corrupted.");
+                                        this.keyFrames.add(null);
                                         corruptedKeyFrames++;
                                         keyFrameId++;
                                     }
                                 } catch (IOException e) {
                                     System.out.println("Keyframe " + keyFrameId +  "corrupted.");
+                                    this.keyFrames.add(null);
                                     corruptedKeyFrames++;
                                     keyFrameId++;
                                 }

@@ -20,10 +20,10 @@ public class App {
                     // "C:\\Users\\OPGam\\Videos\\Solo Progressions\\Problem demonstration.mkv");
             // testVid.displayKeyFrames();
             Directory smallTestRecordingFolder = new Directory(
-                    "C:\\Users\\OPGam\\Videos\\Freshie to Self-Sufficency\\Solo Spearfisher - Copy - Overlap Removed");
+                    "C:\\Users\\OPGam\\Videos\\Freshie to Self-Sufficency\\Rogue Misc\\Misc Clips\\Misc Clips Testing - Overlap Removed");
             // Directory regularRecordingFolder = new Directory(
                   //  "C:\\Users\\OPGam\\Videos\\Roblox VR\\Misc Clips");
-            smallTestRecordingFolder.executeCuts();
+            smallTestRecordingFolder.originalExecuteCuts();
         } catch (InvalidFileException | ExternalCommandException e){
             e.getMessage();
         }

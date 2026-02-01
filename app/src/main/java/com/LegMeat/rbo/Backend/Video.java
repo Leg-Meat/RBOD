@@ -447,11 +447,12 @@ public class Video extends File {
         for (KeyFrame frameVidTwo: videoTwo.getKeyFrames()) {
             for (KeyFrame frameVidOne : this.keyFrames) {
                 if (frameVidOne.equals(frameVidTwo)) {
-                    System.out.println("First Match found at: " + frameVidOne.getTimestamp() +
-                            " and: " + frameVidTwo.getTimestamp());
-                    // Overlapping videos only need to be unidirectonal, so we don't return the timestamp if it is
-                    // as secondary video (i.e. if frameVidOne is 0.0)
-                    if (frameVidOne.getTimestamp() == 0.0) {
+                    // For every overlap there are two reported overlaps (vid 1 overlapping vid 2 and vice versa). We
+                    // only care about the lead videos overlap (non-lead will be 0). There was a cascading delete bug
+                    // when the program was run twice, but this is because when the videos are cut, the non-lead
+                    // video's first keyframe is no longer 0 (e.g. 0.156), so we now use a < operator to filter out non
+                    // -lead overlaps, thus fixing the issue.
+                    if (frameVidOne.getTimestamp() < frameVidTwo.getTimestamp()) {
                         return -1.0;
                     } else {
                         return frameVidOne.getTimestamp();
@@ -459,9 +460,9 @@ public class Video extends File {
                 }
             }
         }
-        // returns -1.0 if no overlap is found.
         return -1.0;
     }
+
     public Video(String fileName, String filePath) {
         super(filePath);
         this.fileName = fileName;

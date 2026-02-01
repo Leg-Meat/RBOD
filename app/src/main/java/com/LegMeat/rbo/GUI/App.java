@@ -23,7 +23,7 @@ public class App {
                     "C:\\Users\\OPGam\\Videos\\Freshie to Self-Sufficency\\Rogue Misc\\Misc Clips\\Misc Clips Testing - Overlap Removed");
             // Directory regularRecordingFolder = new Directory(
                   //  "C:\\Users\\OPGam\\Videos\\Roblox VR\\Misc Clips");
-            smallTestRecordingFolder.executeCuts();
+            smallTestRecordingFolder.originalExecuteCuts();
         } catch (InvalidFileException | ExternalCommandException e){
             e.getMessage();
         }

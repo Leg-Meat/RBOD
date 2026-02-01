@@ -70,7 +70,7 @@ public class Directory {
                     System.out.println("Video " + videoNum + " is corrupted.");
                 } else {
                     try {
-                        video.originalcopyCut(newDirectory);
+                        video.cut(newDirectory, overwrite);
                         System.out.println("Successfully cut video " + videoNum + "!");
                     } catch (InvalidFileException e) {
                         System.out.println("Video has no cutpoint yet.");
